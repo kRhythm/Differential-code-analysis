@@ -51,7 +51,7 @@ public class DiffFilesInCommit {
 
         try (Repository repository = result.getRepository()) {
             
-            Collection<Ref> allRefs = repository.getAllRefs().values();
+            Collection<Ref> allRefs = repository.getRefDatabase().getRefs();
 
             try (RevWalk revWalk = new RevWalk( repository )) {
                 for( Ref ref : allRefs ) {
@@ -142,6 +142,7 @@ public class DiffFilesInCommit {
 								  String D = WordsOfLine[2]; 
 								  System.setOut(console);
 	                                System.out.println("D"+D);
+	                                
 								  try (TreeWalk treeWalk = new TreeWalk(repository)) 
 								  {
 								  treeWalk.addTree(presenttree);
@@ -167,29 +168,63 @@ public class DiffFilesInCommit {
                                 File RevisedFile = new File("C:\\Users\\nvuggam\\Desktop\\Revised.java");
                                 PrintStream OF = new PrintStream(OringinalFile);
                                 PrintStream RF = new PrintStream(RevisedFile);
-                                String O = OriginalM.get(i);///call the cloud search
+                                String O = OriginalM.get(i);
                                 System.setOut(console);
                                 System.out.println("M"+O);
                                 try (TreeWalk treeWalk = new TreeWalk(repository)) {
                                     treeWalk.addTree(presenttree);
-                                    treeWalk.setRecursive(true);
-                                    treeWalk.setFilter(PathFilter.create(O));
-                                    ObjectId objectId = treeWalk.getObjectId(0);
-                                    ObjectLoader loader = repository.open(objectId);
-                                    System.setOut(OF);
-                                    loader.copyTo(System.out);
+                                    treeWalk.setRecursive(false);
+                                    String S = "";
+                                    while(treeWalk.next())
+                                    {
+                                    	if(treeWalk.isSubtree())
+                                    	{
+                                    		S = S + treeWalk.getNameString() + "/";
+                                    		treeWalk.enterSubtree();
+                                    	}
+                                    	else
+                                    	{
+                                    		S = S + treeWalk.getNameString();
+                                    		if(O.equals(S))
+                                    		{
+                                    			ObjectId objectId = treeWalk.getObjectId(0);
+                                                ObjectLoader loader = repository.open(objectId);
+                                                System.setOut(OF);
+                                                loader.copyTo(System.out);
+                                    			break;
+                                    		}
+                                    		S = "";
+                                    	}
+                                    }   
                                 }
                                 String R = RevisedM.get(i);
                                 System.setOut(console);
                                 System.out.println("M"+R);
                                 try (TreeWalk treeWalk = new TreeWalk(repository)) {
                                     treeWalk.addTree(previoustree);
-                                    treeWalk.setRecursive(true);
-                                    treeWalk.setFilter(PathFilter.create(R));
-                                    ObjectId objectId = treeWalk.getObjectId(0);
-                                    ObjectLoader loader = repository.open(objectId);
-                                    System.setOut(RF);
-                                    loader.copyTo(System.out);
+                                    treeWalk.setRecursive(false);
+                                    String S = "";
+                                    while(treeWalk.next())
+                                    {
+                                    	if(treeWalk.isSubtree())
+                                    	{
+                                    		S = S + treeWalk.getNameString() + "/";
+                                    		treeWalk.enterSubtree();
+                                    	}
+                                    	else
+                                    	{
+                                    		S = S + treeWalk.getNameString();
+                                    		if(R.equals(S))
+                                    		{
+                                    			ObjectId objectId = treeWalk.getObjectId(0);
+                                                ObjectLoader loader = repository.open(objectId);
+                                                System.setOut(RF);
+                                                loader.copyTo(System.out);
+                                    			break;
+                                    		}
+                                    		S = "";
+                                    	}
+                                    }   
                                 }
                                 graph_diff g = new graph_diff(count);  
                                 g.main(null);
